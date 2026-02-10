@@ -8,40 +8,54 @@ import axios from "axios";
 // Configuration
 const SCRAPE_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 const XAG_USD_API_URL = "https://data-asg.goldprice.org/dbXRates/USD";
-const CONVERSION_RATE = 93; // Fixed rate as per user request
+const USD_INR_API_URL = "https://data-asg.goldprice.org/dbXRates/INR";
 const TROY_OUNCE_TO_GRAMS = 31.1;
 
 async function scrapeSilverPrice() {
   try {
-    console.log("Starting fetch of silver price from JSON API...");
+    console.log("Starting fetch of silver and exchange rates...");
     
-    const response = await axios.get(XAG_USD_API_URL, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'Accept': 'application/json, text/plain, */*',
-        'Referer': 'https://goldprice.org/'
-      }
-    });
+    const [silverRes, inrRes] = await Promise.all([
+      axios.get(XAG_USD_API_URL, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Accept': 'application/json, text/plain, */*',
+          'Referer': 'https://goldprice.org/'
+        }
+      }),
+      axios.get(USD_INR_API_URL, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Accept': 'application/json, text/plain, */*',
+          'Referer': 'https://goldprice.org/'
+        }
+      })
+    ]);
 
-    const data = response.data;
-    if (!data.items || data.items.length === 0) {
-      console.error("Invalid API response format", data);
+    if (!silverRes.data.items?.[0] || !inrRes.data.items?.[0]) {
+      console.error("Invalid API response format");
       return;
     }
 
-    const item = data.items[0];
-    const priceUsd = item.xagPrice;
+    const priceUsd = silverRes.data.items[0].xagPrice;
+    const xauInr = inrRes.data.items[0].xauPrice;
+    const xauUsd = silverRes.data.items[0].xauPrice;
+    
+    // Derive USD/INR rate from Gold prices (XAUINR / XAUUSD)
+    // goldprice.org provides XAGPrice in native currency for each endpoint.
+    // For the /INR endpoint, xagPrice is already Silver in INR per Troy Ounce.
+    const xagInrPerOunce = inrRes.data.items[0].xagPrice;
 
-    if (!priceUsd) {
-      console.error("Price not found in API response", item);
+    if (!xagInrPerOunce) {
+      console.error("Silver price in INR not found in API response");
       return;
     }
 
     // Calculate Price per Gram in INR
-    // Formula: (XAGUSD / 31.1) * 93
-    const priceInr = (priceUsd / TROY_OUNCE_TO_GRAMS) * CONVERSION_RATE;
+    const priceInr = xagInrPerOunce / TROY_OUNCE_TO_GRAMS;
 
-    console.log(`Fetched Price (USD): ${priceUsd}`);
+    console.log(`Fetched Price (USD/oz): ${priceUsd}`);
+    console.log(`Fetched Price (INR/oz): ${xagInrPerOunce}`);
     console.log(`Calculated Price (INR/g): ${priceInr.toFixed(2)}`);
 
     await storage.createSilverPrice({
