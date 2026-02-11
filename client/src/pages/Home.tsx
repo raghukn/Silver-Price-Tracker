@@ -119,10 +119,10 @@ export default function Home() {
           >
             <h3 className="text-lg font-bold font-display mb-4 text-primary">Calculation Formula</h3>
             <div className="font-mono text-sm bg-background p-4 rounded-xl border border-border text-foreground/80">
-              Price (INR/g) = (XAGUSD / 31.1) × {conversionRate.toFixed(2)}
+              Price (INR/g) = (XAGUSD / 31.1) × ({conversionRate.toFixed(2)} + 2)
             </div>
             <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
-              We take the global spot price of Silver (XAG/USD), convert it to grams by dividing by 31.1 (troy ounce to gram conversion), and then apply the live USD/INR exchange rate (₹{conversionRate.toFixed(2)}) fetched from global markets.
+              We take the global spot price of Silver (XAG/USD), convert it to grams by dividing by 31.1 (troy ounce to gram conversion), and then apply the live USD/INR exchange rate (₹{conversionRate.toFixed(2)}) plus a ₹2 margin.
             </p>
           </motion.div>
 

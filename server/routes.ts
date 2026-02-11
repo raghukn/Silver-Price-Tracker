@@ -49,9 +49,9 @@ async function scrapeSilverPrice() {
 
       if (xagInrPerOunce && priceUsd) {
         const conversionRate = xagInrPerOunce / priceUsd;
-        const priceInr = xagInrPerOunce / TROY_OUNCE_TO_GRAMS;
+        const priceInr = (priceUsd / TROY_OUNCE_TO_GRAMS) * (conversionRate + 2);
 
-        console.log(`USD/oz: ${priceUsd}, INR/oz: ${xagInrPerOunce}, Rate: ${conversionRate.toFixed(4)}`);
+        console.log(`USD/oz: ${priceUsd}, INR/oz: ${xagInrPerOunce}, Rate: ${conversionRate.toFixed(4)}, Price: ${priceInr.toFixed(2)}`);
 
         await storage.createSilverPrice({
           priceUsd: priceUsd.toString(),
@@ -67,7 +67,7 @@ async function scrapeSilverPrice() {
     // In a real app, we'd use a paid API key to avoid 403s.
     const mockPriceUsd = 22.5 + (Math.random() * 0.5);
     const mockRate = 83.1 + (Math.random() * 0.2);
-    const mockPriceInr = (mockPriceUsd / TROY_OUNCE_TO_GRAMS) * mockRate;
+    const mockPriceInr = (mockPriceUsd / TROY_OUNCE_TO_GRAMS) * (mockRate + 2);
 
     await storage.createSilverPrice({
       priceUsd: mockPriceUsd.toFixed(2),

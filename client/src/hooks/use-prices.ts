@@ -18,12 +18,10 @@ export function useSilverPrices() {
     queryFn: async () => {
       const res = await fetch(api.prices.list.path);
       if (!res.ok) throw new Error("Failed to fetch silver prices");
-      // Use the Zod schema from routes for runtime validation if needed
-      // Here we trust the shared types are respected
       const data = await res.json();
       return api.prices.list.responses[200].parse(data);
     },
-    refetchInterval: 60 * 1000, // Refetch every minute to catch the 5-min updates
+    refetchInterval: 5000, // Refresh every 5 seconds for near real-time feel
   });
 }
 
@@ -36,6 +34,6 @@ export function useLatestPrice() {
       const data = await res.json();
       return api.prices.latest.responses[200].parse(data);
     },
-    refetchInterval: 30 * 1000, // Check slightly more often for the absolute latest
+    refetchInterval: 5000, // Refresh every 5 seconds for near real-time feel
   });
 }
