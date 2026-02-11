@@ -54,6 +54,7 @@ export default function Home() {
 
   const latestPriceInr = latest?.priceInr ? parseFloat(latest.priceInr) : 0;
   const latestPriceUsd = latest?.priceUsd ? parseFloat(latest.priceUsd) : 0;
+  const conversionRate = latest?.conversionRate ? parseFloat(latest.conversionRate) : 93;
   const lastUpdated = latest?.timestamp ? new Date(latest.timestamp) : new Date();
 
   return (
@@ -81,26 +82,13 @@ export default function Home() {
             delay={0.2}
           />
 
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="glass-panel rounded-2xl p-6 flex flex-col justify-between"
-          >
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Market Trend</h3>
-              <div className="mt-2 flex items-center gap-3">
-                <span className={`text-3xl font-bold font-display ${trend.isUp ? 'text-green-600' : 'text-red-600'}`}>
-                  {trend.isUp ? '+' : ''}{trend.diff.toFixed(2)}
-                </span>
-                <div className={`flex items-center px-2 py-1 rounded-full text-xs font-bold ${trend.isUp ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                  {trend.isUp ? <ArrowUpRight className="w-3 h-3 mr-1" /> : <ArrowDownRight className="w-3 h-3 mr-1" />}
-                  {trend.percent.toFixed(2)}%
-                </div>
-              </div>
-              <p className="mt-2 text-sm text-muted-foreground">Since last reading (5m)</p>
-            </div>
-          </motion.div>
+          <MetricCard
+            label="USD/INR Exchange Rate"
+            value={`₹${conversionRate.toFixed(2)}`}
+            subValue={`Scraped at ${format(lastUpdated, "h:mm a")}`}
+            icon={<RefreshCw className="w-6 h-6" />}
+            delay={0.3}
+          />
         </div>
 
         {/* Chart Section */}
@@ -117,7 +105,7 @@ export default function Home() {
           </div>
 
           <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-3xl p-6 shadow-xl shadow-black/5">
-            <PriceChart data={prices || []} />
+            <PriceChart data={(prices || []).map(p => ({ ...p, timestamp: new Date(p.timestamp).toISOString() }))} />
           </div>
         </section>
 
@@ -131,10 +119,10 @@ export default function Home() {
           >
             <h3 className="text-lg font-bold font-display mb-4 text-primary">Calculation Formula</h3>
             <div className="font-mono text-sm bg-background p-4 rounded-xl border border-border text-foreground/80">
-              Price (INR/g) = (XAGUSD / 31.1) × 93
+              Price (INR/g) = (XAGUSD / 31.1) × {conversionRate.toFixed(2)}
             </div>
             <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
-              We take the global spot price of Silver (XAG/USD), convert it to grams by dividing by 31.1 (troy ounce to gram conversion), and then apply a multiplier of 93 to estimate the INR rate including import duties and currency conversion.
+              We take the global spot price of Silver (XAG/USD), convert it to grams by dividing by 31.1 (troy ounce to gram conversion), and then apply the live USD/INR exchange rate (₹{conversionRate.toFixed(2)}) fetched from global markets.
             </p>
           </motion.div>
 

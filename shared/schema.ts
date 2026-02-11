@@ -7,6 +7,7 @@ export const silverPrices = pgTable("silver_prices", {
   id: serial("id").primaryKey(),
   priceUsd: decimal("price_usd").notNull(),
   priceInr: decimal("price_inr").notNull(), // Price per gram in INR
+  conversionRate: decimal("conversion_rate").notNull().default("93"), // USD to INR rate
   timestamp: timestamp("timestamp").defaultNow().notNull(),
 });
 
