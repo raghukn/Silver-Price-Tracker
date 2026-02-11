@@ -2,9 +2,10 @@ import { useSilverPrices, useLatestPrice } from "@/hooks/use-prices";
 import { Header } from "@/components/Header";
 import { PriceChart } from "@/components/PriceChart";
 import { MetricCard } from "@/components/MetricCard";
-import { ArrowUpRight, ArrowDownRight, RefreshCw, Loader2, Coins, DollarSign } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, RefreshCw, Loader2, Coins, DollarSign, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 
 export default function Home() {
   const { data: prices, isLoading: isLoadingHistory, isError: isHistoryError } = useSilverPrices();
@@ -23,6 +24,15 @@ export default function Home() {
       isUp: diff >= 0 
     };
   };
+
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const trend = calculateTrend();
 
@@ -99,8 +109,12 @@ export default function Home() {
               <p className="text-muted-foreground">Showing last 12 data points (1 Hour)</p>
             </div>
             <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-full self-start md:self-auto">
+              <Clock className="w-3 h-3 md:w-4 md:h-4 text-primary" />
+              Page Time: {format(currentTime, "h:mm:ss a")}
+            </div>
+            <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-full self-start md:self-auto">
               <RefreshCw className="w-3 h-3 md:w-4 md:h-4 animate-spin-slow" />
-              Last updated: {format(lastUpdated, "MMM d, h:mm a")}
+              Last Data Refresh: {format(lastUpdated, "h:mm:ss a")}
             </div>
           </div>
 
