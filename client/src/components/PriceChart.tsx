@@ -26,8 +26,8 @@ export function PriceChart({ data }: PriceChartProps) {
       (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     );
     
-    // We only want the last 12 points for the trend
-    const recentData = sortedData.slice(-12);
+    // We only want the last 24 points for the trend
+    const recentData = sortedData.slice(-24);
 
     return recentData.map((item) => ({
       ...item,

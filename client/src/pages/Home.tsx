@@ -173,7 +173,7 @@ export default function Home() {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <h2 className="text-2xl font-bold font-display text-foreground">Price Trend</h2>
-              <p className="text-muted-foreground">Showing last 12 data points (1 Hour)</p>
+              <p className="text-muted-foreground">Showing last 24 data points (2 Hours)</p>
             </div>
             <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4 text-xs md:text-sm text-muted-foreground self-start md:self-auto">
               <div className="flex items-center gap-2 bg-muted/30 px-3 py-1.5 rounded-full">

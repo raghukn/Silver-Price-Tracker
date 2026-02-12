@@ -102,7 +102,7 @@ export async function registerRoutes(
   // API Routes
   app.get(api.prices.list.path, async (req, res) => {
     // Return chronological order for the chart (oldest first) so we reverse the storage result (newest first)
-    const prices = await storage.getLatestPrices(12);
+    const prices = await storage.getLatestPrices(24);
     // Convert decimal strings to numbers for the frontend chart
     const formattedPrices = prices.reverse().map(p => ({
       ...p,
