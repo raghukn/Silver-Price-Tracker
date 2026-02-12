@@ -18,13 +18,18 @@ export function Header() {
           </div>
         </div>
         
-        <div className="hidden md:flex items-center gap-4 text-sm font-medium text-muted-foreground">
-          <span className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            Live Connection
-          </span>
-          <div className="h-4 w-px bg-border" />
-          <span>XAG/USD Data Source</span>
+        <div className="flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-4 text-sm font-medium text-muted-foreground">
+            <span className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              Live Connection
+            </span>
+            <div className="h-4 w-px bg-border" />
+            <div className="flex flex-col text-right">
+              <span className="text-[10px] uppercase tracking-wider opacity-60 leading-none mb-1">Creator</span>
+              <span className="text-xs font-semibold text-foreground/80 leading-none">raghu.k.n@gmail.com</span>
+            </div>
+          </div>
         </div>
       </div>
     </header>
