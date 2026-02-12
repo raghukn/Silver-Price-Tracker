@@ -74,6 +74,11 @@ export default function Home() {
     );
   }
 
+  const latestPriceUsd = latest?.priceUsd ? parseFloat(latest.priceUsd) : 0;
+  const etfPrice = latest?.etfPrice ? parseFloat(latest.etfPrice) : 0;
+  const conversionRate = latest?.conversionRate ? parseFloat(latest.conversionRate) : 93;
+  const lastUpdated = latest?.timestamp ? new Date(latest.timestamp) : new Date();
+  
   const latestPriceInr = (latestPriceUsd / 31.3) * conversionRate + marginX;
 
   return (
