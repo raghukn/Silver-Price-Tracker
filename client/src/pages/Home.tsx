@@ -30,6 +30,13 @@ export default function Home() {
   };
 
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [marginX, setMarginX] = useState(2);
+
+  useEffect(() => {
+    if (latest?.marginX) {
+      setMarginX(parseFloat(latest.marginX));
+    }
+  }, [latest]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -115,7 +122,7 @@ export default function Home() {
 
           <MetricCard
             label="Current Silver Price (INR)"
-            value={`₹${latestPriceInr.toFixed(2)}`}
+            value={`₹${((latestPriceUsd / 31.3) * conversionRate + marginX).toFixed(2)}`}
             subValue={`Last computed: ${format(lastUpdated, "h:mm a")}`}
             icon={<Coins className="w-6 h-6" />}
             delay={0.4}
@@ -154,11 +161,26 @@ export default function Home() {
             className="bg-primary/5 rounded-2xl p-8 border border-primary/10"
           >
             <h3 className="text-lg font-bold font-display mb-4 text-primary">Calculation Formula</h3>
-            <div className="font-mono text-sm bg-background p-4 rounded-xl border border-border text-foreground/80">
-              Price (INR/g) = (XAGUSD / 31.1) × ({conversionRate.toFixed(2)} + 2)
+            <div className="font-mono text-sm bg-background p-4 rounded-xl border border-border text-foreground/80 mb-4">
+              Price (INR/g) = (XAGUSD / 31.3) × {conversionRate.toFixed(2)} + {marginX}
             </div>
-            <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
-              We take the global spot price of Silver (XAG/USD), convert it to grams by dividing by 31.1 (troy ounce to gram conversion), and then apply the live USD/INR exchange rate (₹{conversionRate.toFixed(2)}) plus a ₹2 margin.
+            <div className="flex flex-col gap-4 mb-4">
+              <label className="text-sm font-medium">Adjust Margin (X)</label>
+              <div className="flex items-center gap-4">
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="10" 
+                  step="0.1" 
+                  value={marginX} 
+                  onChange={(e) => setMarginX(parseFloat(e.target.value))}
+                  className="w-full"
+                />
+                <span className="font-mono w-12">₹{marginX.toFixed(1)}</span>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              We take the global spot price of Silver (XAG/USD), convert it to grams by dividing by 31.3 (troy ounce to gram conversion), apply the live USD/INR exchange rate (₹{conversionRate.toFixed(2)}), and then add a margin of ₹{marginX.toFixed(1)}.
             </p>
           </motion.div>
 

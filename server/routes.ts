@@ -10,7 +10,7 @@ const SCRAPE_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 const XAG_USD_API_URL = "https://data-asg.goldprice.org/dbXRates/USD";
 const USD_INR_API_URL = "https://data-asg.goldprice.org/dbXRates/INR";
 const ETF_URL = "https://www.nseindia.com/get-quote/equity/SILVERBEES";
-const TROY_OUNCE_TO_GRAMS = 31.1;
+const TROY_OUNCE_TO_GRAMS = 31.3;
 
 async function fetchEtfPrice() {
   try {
@@ -61,13 +61,15 @@ async function scrapeSilverPrice() {
 
       if (xagInrPerOunce && priceUsd) {
         const conversionRate = xagInrPerOunce / priceUsd;
-        const priceInr = (priceUsd / TROY_OUNCE_TO_GRAMS) * (conversionRate + 2);
+        const currentMargin = 2; // Default, can be updated via API if we add a route
+        const priceInr = (priceUsd / TROY_OUNCE_TO_GRAMS) * conversionRate + currentMargin;
 
         await storage.createSilverPrice({
           priceUsd: priceUsd.toString(),
           priceInr: priceInr.toFixed(2),
           conversionRate: conversionRate.toFixed(4),
           etfPrice: etfPrice ? etfPrice.toString() : null,
+          marginX: currentMargin.toString(),
         });
         return;
       }
@@ -75,7 +77,8 @@ async function scrapeSilverPrice() {
 
     const mockPriceUsd = 22.5 + (Math.random() * 0.5);
     const mockRate = 83.1 + (Math.random() * 0.2);
-    const mockPriceInr = (mockPriceUsd / TROY_OUNCE_TO_GRAMS) * (mockRate + 2);
+    const currentMargin = 2;
+    const mockPriceInr = (mockPriceUsd / TROY_OUNCE_TO_GRAMS) * mockRate + currentMargin;
     const mockEtf = 70 + (Math.random() * 5);
 
     await storage.createSilverPrice({
@@ -83,6 +86,7 @@ async function scrapeSilverPrice() {
       priceInr: mockPriceInr.toFixed(2),
       conversionRate: mockRate.toFixed(4),
       etfPrice: etfPrice ? etfPrice.toString() : mockEtf.toFixed(2),
+      marginX: currentMargin.toString(),
     });
 
   } catch (err: any) {
