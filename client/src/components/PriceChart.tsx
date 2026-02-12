@@ -33,6 +33,7 @@ export function PriceChart({ data }: PriceChartProps) {
       ...item,
       // Parse float for recharts
       priceInrVal: parseFloat(item.priceInr),
+      etfPriceVal: item.etfPrice ? parseFloat(item.etfPrice) : null,
       formattedTime: format(new Date(item.timestamp), "HH:mm"),
     }));
   }, [data]);
@@ -46,8 +47,12 @@ export function PriceChart({ data }: PriceChartProps) {
   }
 
   // Calculate domain for Y-axis to make the chart look dynamic (zoom in on the variation)
-  const minPrice = Math.min(...chartData.map((d) => d.priceInrVal));
-  const maxPrice = Math.max(...chartData.map((d) => d.priceInrVal));
+  const allValues = chartData.flatMap(d => [
+    d.priceInrVal,
+    ...(d.etfPriceVal !== null ? [d.etfPriceVal] : [])
+  ]);
+  const minPrice = Math.min(...allValues);
+  const maxPrice = Math.max(...allValues);
   const padding = (maxPrice - minPrice) * 0.1; // 10% padding
 
   return (
@@ -63,6 +68,10 @@ export function PriceChart({ data }: PriceChartProps) {
             <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.2} />
               <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+            </linearGradient>
+            <linearGradient id="colorEtf" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="hsl(var(--orange-500))" stopOpacity={0.2} />
+              <stop offset="95%" stopColor="hsl(var(--orange-500))" stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
@@ -89,16 +98,25 @@ export function PriceChart({ data }: PriceChartProps) {
               boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
             }}
             itemStyle={{ color: "hsl(var(--foreground))", fontWeight: 600 }}
-            formatter={(value: number) => [`₹${value.toFixed(2)}`, "Price per Gram"]}
             labelStyle={{ color: "hsl(var(--muted-foreground))" }}
           />
           <Area 
             type="monotone" 
             dataKey="priceInrVal" 
+            name="Physical Silver"
             stroke="hsl(var(--primary))" 
             strokeWidth={3}
             fillOpacity={1} 
             fill="url(#colorPrice)" 
+          />
+          <Area 
+            type="monotone" 
+            dataKey="etfPriceVal" 
+            name="Silver ETF"
+            stroke="#f97316" 
+            strokeWidth={3}
+            fillOpacity={1} 
+            fill="url(#colorEtf)" 
           />
         </AreaChart>
       </ResponsiveContainer>
