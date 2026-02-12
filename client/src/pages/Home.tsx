@@ -82,7 +82,7 @@ export default function Home() {
           <MetricCard
             label="Current Silver Price (INR)"
             value={`₹${latestPriceInr.toFixed(2)}`}
-            subValue="Per Gram"
+            subValue={`Last computed: ${format(lastUpdated, "h:mm a")}`}
             icon={<Coins className="w-6 h-6" />}
             delay={0.1}
             className="border-l-4 border-l-primary"
@@ -91,7 +91,7 @@ export default function Home() {
           <MetricCard
             label="Global Spot Price (USD)"
             value={`$${latestPriceUsd.toFixed(2)}`}
-            subValue="Per Ounce (XAG)"
+            subValue={`Last updated: ${format(lastUpdated, "h:mm a")}`}
             icon={<DollarSign className="w-6 h-6" />}
             delay={0.2}
           />
