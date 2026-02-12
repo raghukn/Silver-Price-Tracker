@@ -74,11 +74,7 @@ export default function Home() {
     );
   }
 
-  const latestPriceInr = latest?.priceInr ? parseFloat(latest.priceInr) : 0;
-  const latestPriceUsd = latest?.priceUsd ? parseFloat(latest.priceUsd) : 0;
-  const etfPrice = latest?.etfPrice ? parseFloat(latest.etfPrice) : 0;
-  const conversionRate = latest?.conversionRate ? parseFloat(latest.conversionRate) : 93;
-  const lastUpdated = latest?.timestamp ? new Date(latest.timestamp) : new Date();
+  const latestPriceInr = (latestPriceUsd / 31.3) * conversionRate + marginX;
 
   return (
     <div className="min-h-screen bg-background">
@@ -140,7 +136,7 @@ export default function Home() {
 
           <MetricCard
             label="Current Silver Price (INR)"
-            value={`₹${((latestPriceUsd / 31.3) * conversionRate + marginX).toFixed(2)}`}
+            value={`₹${latestPriceInr.toFixed(2)}`}
             subValue={`Last computed: ${format(lastUpdated, "h:mm a")}`}
             icon={<Coins className="w-6 h-6" />}
             delay={0.4}
