@@ -13,7 +13,12 @@ export default function Home() {
   const { data: latest, isLoading: isLoadingLatest, refetch: refetchLatest } = useLatestPrice();
 
   const handleManualRefresh = async () => {
-    await Promise.all([refetchHistory(), refetchLatest()]);
+    try {
+      await fetch("/api/prices/scrape", { method: "POST" });
+      await Promise.all([refetchHistory(), refetchLatest()]);
+    } catch (err) {
+      console.error("Manual refresh failed", err);
+    }
   };
 
   // Helper to determine trend

@@ -117,6 +117,16 @@ export async function registerRoutes(
     res.json(price || null);
   });
 
+  app.post("/api/prices/scrape", async (req, res) => {
+    try {
+      await scrapeSilverPrice();
+      const latest = await storage.getLatestPrice();
+      res.json(latest);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to trigger scrape" });
+    }
+  });
+
   // Start the scraping job
   // Run once immediately on startup
   scrapeSilverPrice();
