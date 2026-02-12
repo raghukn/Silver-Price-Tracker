@@ -13,15 +13,20 @@ export default function Home() {
   const { data: prices, isLoading: isLoadingHistory, isError: isHistoryError, refetch: refetchHistory } = useSilverPrices(refreshInterval * 60000);
   const { data: latest, isLoading: isLoadingLatest, refetch: refetchLatest } = useLatestPrice(refreshInterval * 60000);
 
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastRefreshError, setLastRefreshError] = useState<Date | null>(null);
+  const [lastSuccessfulRefresh, setLastSuccessfulRefresh] = useState<Date | null>(new Date());
 
   const handleManualRefresh = async () => {
     setIsRefreshing(true);
     try {
-      await fetch("/api/prices/scrape", { method: "POST" });
+      const res = await fetch("/api/prices/scrape", { method: "POST" });
+      if (!res.ok) throw new Error("Scrape failed");
       await Promise.all([refetchHistory(), refetchLatest()]);
+      setLastSuccessfulRefresh(new Date());
+      setLastRefreshError(null);
     } catch (err) {
       console.error("Manual refresh failed", err);
+      setLastRefreshError(new Date());
     } finally {
       setIsRefreshing(false);
     }
@@ -169,13 +174,23 @@ export default function Home() {
               <h2 className="text-2xl font-bold font-display text-foreground">Price Trend</h2>
               <p className="text-muted-foreground">Showing last 12 data points (1 Hour)</p>
             </div>
-            <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-full self-start md:self-auto">
-              <Clock className="w-3 h-3 md:w-4 md:h-4 text-primary" />
-              Page Time: {format(currentTime, "h:mm:ss a")}
-            </div>
-            <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-full self-start md:self-auto">
-              <RefreshCw className="w-3 h-3 md:w-4 md:h-4 animate-spin-slow" />
-              Last Data Refresh: {format(lastUpdated, "h:mm:ss a")}
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4 text-xs md:text-sm text-muted-foreground self-start md:self-auto">
+              <div className="flex items-center gap-2 bg-muted/30 px-3 py-1.5 rounded-full">
+                <Clock className="w-3 h-3 md:w-4 md:h-4 text-primary" />
+                Page Time: {format(currentTime, "h:mm:ss a")}
+              </div>
+              {lastSuccessfulRefresh && (
+                <div className="flex items-center gap-2 bg-muted/30 px-3 py-1.5 rounded-full">
+                  <RefreshCw className="w-3 h-3 md:w-4 md:h-4 animate-spin-slow" />
+                  Last Success: {format(lastSuccessfulRefresh, "h:mm:ss a")}
+                </div>
+              )}
+              {lastRefreshError && (
+                <div className="flex items-center gap-2 bg-destructive/10 text-destructive px-3 py-1.5 rounded-full border border-destructive/20">
+                  <Clock className="w-3 h-3 md:w-4 md:h-4" />
+                  Refresh Failed: {format(lastRefreshError, "h:mm:ss a")}
+                </div>
+              )}
             </div>
           </div>
 
