@@ -8,6 +8,7 @@ export const silverPrices = pgTable("silver_prices", {
   priceUsd: decimal("price_usd").notNull(),
   priceInr: decimal("price_inr").notNull(), // Price per gram in INR
   conversionRate: decimal("conversion_rate").notNull().default("93"), // USD to INR rate
+  etfPrice: decimal("etf_price"), // Silver ETF price in INR
   timestamp: timestamp("timestamp").defaultNow().notNull(),
 });
 

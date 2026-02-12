@@ -68,6 +68,7 @@ export default function Home() {
 
   const latestPriceInr = latest?.priceInr ? parseFloat(latest.priceInr) : 0;
   const latestPriceUsd = latest?.priceUsd ? parseFloat(latest.priceUsd) : 0;
+  const etfPrice = latest?.etfPrice ? parseFloat(latest.etfPrice) : 0;
   const conversionRate = latest?.conversionRate ? parseFloat(latest.conversionRate) : 93;
   const lastUpdated = latest?.timestamp ? new Date(latest.timestamp) : new Date();
 
@@ -78,7 +79,7 @@ export default function Home() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         
         {/* Top Metric Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <MetricCard
             label="Current Silver Price (INR)"
             value={`₹${latestPriceInr.toFixed(2)}`}
@@ -88,6 +89,14 @@ export default function Home() {
             className="border-l-4 border-l-primary"
           />
           
+          <MetricCard
+            label="Silver ETF Price (NSE)"
+            value={`₹${etfPrice.toFixed(2)}`}
+            subValue={`SILVERBEES at ${format(lastUpdated, "h:mm a")}`}
+            icon={<Coins className="w-6 h-6 text-orange-500" />}
+            delay={0.15}
+          />
+
           <MetricCard
             label="Global Spot Price (USD)"
             value={`$${latestPriceUsd.toFixed(2)}`}
