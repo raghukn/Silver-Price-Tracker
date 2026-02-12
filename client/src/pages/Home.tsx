@@ -189,19 +189,37 @@ export default function Home() {
             <div className="font-mono text-sm bg-background p-4 rounded-xl border border-border text-foreground/80 mb-4">
               Price (INR/g) = (XAGUSD / 31.3) × {conversionRate.toFixed(2)} + {marginX}
             </div>
-            <div className="flex flex-col gap-4 mb-4">
-              <label className="text-sm font-medium">Adjust Margin (X)</label>
-              <div className="flex items-center gap-4">
-                <input 
-                  type="range" 
-                  min="0" 
-                  max="10" 
-                  step="0.1" 
-                  value={marginX} 
-                  onChange={(e) => setMarginX(parseFloat(e.target.value))}
-                  className="w-full"
-                />
-                <span className="font-mono w-12">₹{marginX.toFixed(1)}</span>
+            <div className="flex flex-col gap-6 mb-4">
+              <div className="flex flex-col gap-3">
+                <label className="text-sm font-medium">Adjust Margin (X)</label>
+                <div className="flex items-center gap-4">
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="10" 
+                    step="0.1" 
+                    value={marginX} 
+                    onChange={(e) => setMarginX(parseFloat(e.target.value))}
+                    className="w-full"
+                  />
+                  <span className="font-mono w-16 text-right">₹{marginX.toFixed(1)}</span>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <label className="text-sm font-medium">Auto-Refresh Interval</label>
+                <div className="flex items-center gap-4">
+                  <input 
+                    type="range" 
+                    min="1" 
+                    max="15" 
+                    step="1" 
+                    value={refreshInterval} 
+                    onChange={(e) => setRefreshInterval(parseInt(e.target.value))}
+                    className="w-full"
+                  />
+                  <span className="font-mono w-16 text-right">{refreshInterval}m</span>
+                </div>
               </div>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
@@ -220,11 +238,11 @@ export default function Home() {
             <ul className="space-y-3 text-sm text-muted-foreground">
               <li className="flex items-start gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-accent mt-1.5" />
-                Data is scraped from Investing.com every 5 minutes.
+                Data is updated every {refreshInterval} minutes. Use the slider below to adjust polling frequency.
               </li>
               <li className="flex items-start gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-accent mt-1.5" />
-                The chart displays the most recent 12 data points to help identify short-term trends.
+                The chart displays the most recent 12 data points.
               </li>
               <li className="flex items-start gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-accent mt-1.5" />
