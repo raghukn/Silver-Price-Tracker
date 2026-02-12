@@ -35,17 +35,20 @@ async function scrapeSilverPrice() {
     
     const fetchHeaders = {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-      'Accept': 'application/json, text/plain, */*',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
       'Accept-Language': 'en-US,en;q=0.9',
-      'Referer': 'https://goldprice.org/',
-      'Origin': 'https://goldprice.org',
-      'Sec-Fetch-Dest': 'empty',
-      'Sec-Fetch-Mode': 'cors',
-      'Sec-Fetch-Site': 'same-site'
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
+      'Upgrade-Insecure-Requests': '1',
+      'Referer': 'https://www.google.com/',
     };
 
     const [silverRes, inrRes, etfPrice] = await Promise.all([
-      axios.get(XAG_USD_API_URL, { headers: fetchHeaders, timeout: 10000, validateStatus: (s) => s < 500 }),
+      axios.get("https://in.investing.com/currencies/xag-usd", { 
+        headers: fetchHeaders, 
+        timeout: 15000, 
+        validateStatus: (s) => s < 500 
+      }),
       axios.get(USD_INR_API_URL, { headers: fetchHeaders, timeout: 10000, validateStatus: (s) => s < 500 }),
       fetchEtfPrice()
     ]).catch(err => {
@@ -54,6 +57,37 @@ async function scrapeSilverPrice() {
     });
 
     const isJson = (res: any) => res?.headers?.['content-type']?.includes('application/json');
+
+    // Handle Investing.com HTML response
+    if (silverRes.status === 200 && !isJson(silverRes)) {
+      const html = silverRes.data;
+      // Look for the last price in the JSON-LD or script tags which are more reliable
+      const match = html.match(/data-test="last-price">([\d,.]+)</) || html.match(/"last_price":"([\d,.]+)"/);
+      const jsonMatch = html.match(/"last_price":\s*"([\d,.]+)"/) || 
+                        html.match(/last_price":"([\d,.]+)"/) ||
+                        html.match(/instrument_last_price">([\d,.]+)</);
+      
+      const priceMatch = match || jsonMatch;
+      
+      if (priceMatch) {
+        const priceUsd = parseFloat(priceMatch[1].replace(/,/g, ''));
+        const inrMatch = html.match(/"INR":([\d,.]+)/); // Try to find conversion rate if available
+        const conversionRate = inrMatch ? parseFloat(inrMatch[1]) : 83.5; // Fallback rate
+        
+        const currentMargin = 2;
+        const priceInr = (priceUsd / TROY_OUNCE_TO_GRAMS) * conversionRate + currentMargin;
+
+        console.log(`Successfully scraped XAG/USD: $${priceUsd} from Investing.com`);
+        await storage.createSilverPrice({
+          priceUsd: priceUsd.toString(),
+          priceInr: priceInr.toFixed(2),
+          conversionRate: conversionRate.toFixed(4),
+          etfPrice: etfPrice ? etfPrice.toString() : null,
+          marginX: currentMargin.toString(),
+        });
+        return;
+      }
+    }
 
     if (silverRes.status === 200 && inrRes.status === 200 && isJson(silverRes) && isJson(inrRes)) {
       const priceUsd = silverRes.data.items?.[0]?.xagPrice;
