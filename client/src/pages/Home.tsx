@@ -9,8 +9,9 @@ import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 
 export default function Home() {
-  const { data: prices, isLoading: isLoadingHistory, isError: isHistoryError, refetch: refetchHistory } = useSilverPrices();
-  const { data: latest, isLoading: isLoadingLatest, refetch: refetchLatest } = useLatestPrice();
+  const [refreshInterval, setRefreshInterval] = useState(5); // in minutes
+  const { data: prices, isLoading: isLoadingHistory, isError: isHistoryError, refetch: refetchHistory } = useSilverPrices(refreshInterval * 60000);
+  const { data: latest, isLoading: isLoadingLatest, refetch: refetchLatest } = useLatestPrice(refreshInterval * 60000);
 
   const handleManualRefresh = async () => {
     try {

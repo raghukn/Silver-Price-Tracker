@@ -15,7 +15,7 @@ export interface SilverPrice {
   timestamp: string; // serialized date
 }
 
-export function useSilverPrices() {
+export function useSilverPrices(intervalMs: number = 5000) {
   return useQuery({
     queryKey: [api.prices.list.path],
     queryFn: async () => {
@@ -24,11 +24,11 @@ export function useSilverPrices() {
       const data = await res.json();
       return api.prices.list.responses[200].parse(data);
     },
-    refetchInterval: 5000, // Refresh every 5 seconds for near real-time feel
+    refetchInterval: intervalMs,
   });
 }
 
-export function useLatestPrice() {
+export function useLatestPrice(intervalMs: number = 5000) {
   return useQuery({
     queryKey: [api.prices.latest.path],
     queryFn: async () => {
@@ -37,6 +37,6 @@ export function useLatestPrice() {
       const data = await res.json();
       return api.prices.latest.responses[200].parse(data);
     },
-    refetchInterval: 5000, // Refresh every 5 seconds for near real-time feel
+    refetchInterval: intervalMs,
   });
 }
