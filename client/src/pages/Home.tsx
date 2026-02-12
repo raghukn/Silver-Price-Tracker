@@ -13,12 +13,17 @@ export default function Home() {
   const { data: prices, isLoading: isLoadingHistory, isError: isHistoryError, refetch: refetchHistory } = useSilverPrices(refreshInterval * 60000);
   const { data: latest, isLoading: isLoadingLatest, refetch: refetchLatest } = useLatestPrice(refreshInterval * 60000);
 
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
   const handleManualRefresh = async () => {
+    setIsRefreshing(true);
     try {
       await fetch("/api/prices/scrape", { method: "POST" });
       await Promise.all([refetchHistory(), refetchLatest()]);
     } catch (err) {
       console.error("Manual refresh failed", err);
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
@@ -104,9 +109,10 @@ export default function Home() {
             className="w-full md:w-auto gap-2 shadow-lg shadow-primary/20 hover-elevate active-elevate-2"
             size="lg"
             data-testid="button-refresh-all"
+            disabled={isRefreshing}
           >
-            <RefreshCw className={`w-5 h-5 ${isLoadingHistory || isLoadingLatest ? "animate-spin" : ""}`} />
-            Refresh All Metrics
+            <RefreshCw className={`w-5 h-5 ${isRefreshing ? "animate-spin" : ""}`} />
+            {isRefreshing ? "Refreshing..." : "Refresh All Metrics"}
           </Button>
         </div>
 
@@ -127,11 +133,12 @@ export default function Home() {
             icon={
               <button 
                 onClick={handleManualRefresh}
-                className="hover:rotate-180 transition-transform duration-500 p-1 rounded-full hover:bg-primary/10"
+                className={`hover:rotate-180 transition-transform duration-500 p-1 rounded-full hover:bg-primary/10 ${isRefreshing ? "opacity-50 cursor-not-allowed" : ""}`}
                 title="Refresh Data"
                 data-testid="button-manual-refresh"
+                disabled={isRefreshing}
               >
-                <RefreshCw className="w-6 h-6" />
+                <RefreshCw className={`w-6 h-6 ${isRefreshing ? "animate-spin" : ""}`} />
               </button>
             }
             delay={0.2}
