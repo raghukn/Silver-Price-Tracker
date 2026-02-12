@@ -8,8 +8,12 @@ import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 
 export default function Home() {
-  const { data: prices, isLoading: isLoadingHistory, isError: isHistoryError } = useSilverPrices();
-  const { data: latest, isLoading: isLoadingLatest } = useLatestPrice();
+  const { data: prices, isLoading: isLoadingHistory, isError: isHistoryError, refetch: refetchHistory } = useSilverPrices();
+  const { data: latest, isLoading: isLoadingLatest, refetch: refetchLatest } = useLatestPrice();
+
+  const handleManualRefresh = async () => {
+    await Promise.all([refetchHistory(), refetchLatest()]);
+  };
 
   // Helper to determine trend
   const calculateTrend = () => {
@@ -96,7 +100,16 @@ export default function Home() {
             label="USD/INR Exchange Rate"
             value={`₹${conversionRate.toFixed(2)}`}
             subValue={`Scraped at ${format(lastUpdated, "h:mm a")}`}
-            icon={<RefreshCw className="w-6 h-6" />}
+            icon={
+              <button 
+                onClick={handleManualRefresh}
+                className="hover:rotate-180 transition-transform duration-500 p-1 rounded-full hover:bg-primary/10"
+                title="Refresh Data"
+                data-testid="button-manual-refresh"
+              >
+                <RefreshCw className="w-6 h-6" />
+              </button>
+            }
             delay={0.3}
           />
         </div>
