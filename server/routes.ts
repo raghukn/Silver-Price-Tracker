@@ -46,8 +46,11 @@ async function scrapeSilverPrice() {
     };
 
     const [silverRes, inrRes, etfPrice] = await Promise.all([
-      axios.get("https://www.investing.com/currencies/xag-usd", { 
-        headers: fetchHeaders, 
+      axios.get("https://finance.yahoo.com/quote/XAGX-USD/", { 
+        headers: {
+          ...fetchHeaders,
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+        }, 
         timeout: 15000, 
         validateStatus: (s) => s < 500 
       }),
@@ -58,30 +61,26 @@ async function scrapeSilverPrice() {
       throw err;
     });
 
-    // Handle Search/Investing HTML response
+    // Handle Search/Yahoo HTML response
     if (silverRes.status === 200 && !isJson(silverRes)) {
       const html = silverRes.data;
       
-      // Attempt to find the price in common Investing.com patterns
-      // Patterns: data-test="last-price", instrument-price-last, or in script tags
-      const match = html.match(/data-test="last-price"[^>]*>([\d,.]+)</) || 
-                    html.match(/instrument-price-last[^>]*>([\d,.]+)</) ||
-                    html.match(/"last_price":"([\d,.]+)"/) ||
-                    html.match(/last_last">([\d,.]+)</);
+      // Yahoo Finance specific price patterns
+      const match = html.match(/data-field="regularMarketPrice"[^>]*value="([\d,.]+)"/) || 
+                    html.match(/["']regularMarketPrice["']\s*:\s*\{\s*["']raw["']\s*:\s*([\d,.]+)/) ||
+                    html.match(/class="[\w\s]*Fw\(b\) Fz\(36px\)[\w\s]*">([\d,.]+)</) ||
+                    html.match(/fin-streamer[^>]*data-field="regularMarketPrice"[^>]*>([\d,.]+)</);
       
       if (match) {
         const priceUsd = parseFloat(match[1].replace(/,/g, ''));
         
-        // Validation: Expecting price around $70-$90 based on user report and search
+        // Validation: Expecting price around $30-$90 based on current market
         if (priceUsd > 10 && priceUsd < 500) {
           // Get conversion rate from INR source if possible
           let conversionRate = 83.5;
           if (inrRes.status === 200 && isJson(inrRes)) {
             const xagInrPerOunce = inrRes.data.items?.[0]?.xagPrice;
             if (xagInrPerOunce) {
-              // Note: goldprice.org INR API might give price in Ounces
-              // We need USD/INR rate. Usually around 83-95.
-              // If we have XAG/INR and XAG/USD, Rate = (XAG/INR) / (XAG/USD)
               conversionRate = xagInrPerOunce / priceUsd;
             }
           }
@@ -89,7 +88,7 @@ async function scrapeSilverPrice() {
           const currentMargin = 2;
           const priceInr = (priceUsd / TROY_OUNCE_TO_GRAMS) * conversionRate + currentMargin;
 
-          console.log(`[Scraper Success] XAG/USD: $${priceUsd} | Rate: ${conversionRate.toFixed(2)}`);
+          console.log(`[Scraper Success] XAG/USD: $${priceUsd} from Yahoo | Rate: ${conversionRate.toFixed(2)}`);
           
           await storage.createSilverPrice({
             priceUsd: priceUsd.toString(),
@@ -101,7 +100,7 @@ async function scrapeSilverPrice() {
           return;
         }
       }
-      console.warn("[Scraper Warning] HTML matched but price invalid or not found. Falling back to goldprice.org or mock.");
+      console.warn("[Scraper Warning] HTML matched but price invalid or not found on Yahoo. Falling back.");
     }
 
     if (silverRes.status === 200 && inrRes.status === 200 && isJson(silverRes) && isJson(inrRes)) {

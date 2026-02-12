@@ -265,7 +265,7 @@ export default function Home() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-accent mt-1.5" />
-                Pricing sourced from global market indicators including Investing.com and Live Spot Data.
+                Pricing sourced from global market indicators including Yahoo Finance and Live Spot Data.
               </li>
               <li className="flex items-start gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-accent mt-1.5" />
