@@ -9,6 +9,9 @@ export interface SilverPrice {
   id: number;
   priceUsd: string; // decimal returns string
   priceInr: string; // decimal returns string
+  conversionRate: string;
+  etfPrice: string | null;
+  marginX: string;
   timestamp: string; // serialized date
 }
 

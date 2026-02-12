@@ -166,12 +166,7 @@ export default function Home() {
           </div>
 
           <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-3xl p-6 shadow-xl shadow-black/5">
-            <PriceChart data={(prices || []).map(p => ({ 
-              ...p, 
-              timestamp: new Date(p.timestamp).toISOString(),
-              priceInr: Number(p.priceInr),
-              etfPrice: p.etfPrice ? Number(p.etfPrice) : null
-            }))} />
+            <PriceChart data={(prices || []).map(p => ({ ...p, timestamp: new Date(p.timestamp).toISOString() }))} />
           </div>
         </section>
 
