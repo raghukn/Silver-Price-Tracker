@@ -13,6 +13,7 @@ export default function Home() {
   const { data: prices, isLoading: isLoadingHistory, isError: isHistoryError, refetch: refetchHistory } = useSilverPrices(refreshInterval * 60000);
   const { data: latest, isLoading: isLoadingLatest, refetch: refetchLatest } = useLatestPrice(refreshInterval * 60000);
 
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefreshError, setLastRefreshError] = useState<Date | null>(null);
   const [lastSuccessfulRefresh, setLastSuccessfulRefresh] = useState<Date | null>(new Date());
 
