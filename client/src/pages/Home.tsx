@@ -2,6 +2,7 @@ import { useSilverPrices, useLatestPrice } from "@/hooks/use-prices";
 import { Header } from "@/components/Header";
 import { PriceChart } from "@/components/PriceChart";
 import { MetricCard } from "@/components/MetricCard";
+import { Button } from "@/components/ui/button";
 import { ArrowUpRight, ArrowDownRight, RefreshCw, Loader2, Coins, DollarSign, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
@@ -85,6 +86,23 @@ export default function Home() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         
+        {/* Header and Refresh */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+          <div>
+            <h1 className="text-3xl font-bold font-display text-foreground">Market Overview</h1>
+            <p className="text-muted-foreground">Real-time silver prices and exchange rates</p>
+          </div>
+          <Button 
+            onClick={handleManualRefresh}
+            className="w-full md:w-auto gap-2 shadow-lg shadow-primary/20 hover-elevate active-elevate-2"
+            size="lg"
+            data-testid="button-refresh-all"
+          >
+            <RefreshCw className={`w-5 h-5 ${isLoadingHistory || isLoadingLatest ? "animate-spin" : ""}`} />
+            Refresh All Metrics
+          </Button>
+        </div>
+
         {/* Top Metric Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <MetricCard
