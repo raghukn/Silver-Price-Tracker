@@ -81,28 +81,11 @@ export default function Home() {
         {/* Top Metric Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <MetricCard
-            label="Current Silver Price (INR)"
-            value={`₹${latestPriceInr.toFixed(2)}`}
-            subValue={`Last computed: ${format(lastUpdated, "h:mm a")}`}
-            icon={<Coins className="w-6 h-6" />}
-            delay={0.1}
-            className="border-l-4 border-l-primary"
-          />
-          
-          <MetricCard
-            label="Silver ETF Price (NSE)"
-            value={`₹${etfPrice.toFixed(2)}`}
-            subValue={`SILVERBEES at ${format(lastUpdated, "h:mm a")}`}
-            icon={<Coins className="w-6 h-6 text-orange-500" />}
-            delay={0.15}
-          />
-
-          <MetricCard
             label="Global Spot Price (USD)"
             value={`$${latestPriceUsd.toFixed(2)}`}
             subValue={`Last updated: ${format(lastUpdated, "h:mm a")}`}
             icon={<DollarSign className="w-6 h-6" />}
-            delay={0.2}
+            delay={0.1}
           />
 
           <MetricCard
@@ -119,7 +102,24 @@ export default function Home() {
                 <RefreshCw className="w-6 h-6" />
               </button>
             }
+            delay={0.2}
+          />
+
+          <MetricCard
+            label="Silver ETF Price (NSE)"
+            value={`₹${etfPrice.toFixed(2)}`}
+            subValue={`SILVERBEES at ${format(lastUpdated, "h:mm a")}`}
+            icon={<Coins className="w-6 h-6 text-orange-500" />}
             delay={0.3}
+          />
+
+          <MetricCard
+            label="Current Silver Price (INR)"
+            value={`₹${latestPriceInr.toFixed(2)}`}
+            subValue={`Last computed: ${format(lastUpdated, "h:mm a")}`}
+            icon={<Coins className="w-6 h-6" />}
+            delay={0.4}
+            className="border-l-4 border-l-primary"
           />
         </div>
 
