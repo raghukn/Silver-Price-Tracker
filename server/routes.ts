@@ -35,24 +35,29 @@ async function scrapeSilverPrice() {
     
     const isJson = (res: any) => res?.headers?.['content-type']?.includes('application/json');
 
-    const fetchHeaders = {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-      'Accept-Language': 'en-US,en;q=0.9',
-    };
-
     const [silverRes, inrRes, etfPrice] = await Promise.all([
       axios.get("https://finance.yahoo.com/quote/XAGX-USD/", { 
-        headers: {
-          ...fetchHeaders,
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-        }, 
         timeout: 15000, 
-        validateStatus: (s) => s < 500 
+        validateStatus: (s) => s < 500,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Accept-Encoding': 'identity',
+        },
+        responseType: 'text'
       }),
-      axios.get(USD_INR_API_URL, { headers: fetchHeaders, timeout: 10000, validateStatus: (s) => s < 500 }),
+      axios.get(USD_INR_API_URL, { timeout: 10000, validateStatus: (s) => s < 500 }),
       fetchEtfPrice()
     ]).catch(err => {
+      if (err.message.includes('Header overflow')) {
+        console.error("Header overflow detected, attempting recovery...");
+        return Promise.all([
+          axios.get("https://finance.yahoo.com/quote/XAGX-USD/", { timeout: 15000, headers: { 'User-Agent': 'curl/7.68.0' }, responseType: 'text' }),
+          axios.get(USD_INR_API_URL, { timeout: 10000 }),
+          fetchEtfPrice()
+        ]);
+      }
       console.error("Fetch failed:", err.message);
       throw err;
     });
@@ -61,16 +66,19 @@ async function scrapeSilverPrice() {
     if (silverRes.status === 200 && !isJson(silverRes)) {
       const html = silverRes.data;
       
-      // Yahoo Finance specific price patterns
+      // Yahoo Finance specific price patterns for XAGX-USD
+      // Looking for the main price element
       const match = html.match(/data-field="regularMarketPrice"[^>]*value="([\d,.]+)"/) || 
                     html.match(/["']regularMarketPrice["']\s*:\s*\{\s*["']raw["']\s*:\s*([\d,.]+)/) ||
                     html.match(/class="[\w\s]*Fw\(b\) Fz\(36px\)[\w\s]*">([\d,.]+)</) ||
-                    html.match(/fin-streamer[^>]*data-field="regularMarketPrice"[^>]*>([\d,.]+)</);
+                    html.match(/fin-streamer[^>]*data-field="regularMarketPrice"[^>]*>([\d,.]+)</) ||
+                    html.match(/<fin-streamer[^>]*value="([\d,.]+)"/) ||
+                    html.match(/Price:?\s*\$?([\d,.]+)/i);
       
       if (match) {
         const priceUsd = parseFloat(match[1].replace(/,/g, ''));
         
-        // Validation: Expecting price around $30-$90 based on current market
+        // Validation: Expecting price around $25-$50 currently.
         if (priceUsd > 10 && priceUsd < 500) {
           // Get conversion rate from INR source if possible
           let conversionRate = 83.5;
@@ -78,13 +86,17 @@ async function scrapeSilverPrice() {
             const xagInrPerOunce = inrRes.data.items?.[0]?.xagPrice;
             if (xagInrPerOunce) {
               conversionRate = xagInrPerOunce / priceUsd;
+              // Sanity check for rate (usually 80-95)
+              if (conversionRate < 70 || conversionRate > 110) {
+                conversionRate = 83.5;
+              }
             }
           }
 
           const currentMargin = 2;
           const priceInr = (priceUsd / TROY_OUNCE_TO_GRAMS) * conversionRate + currentMargin;
 
-          console.log(`[Scraper Success] XAG/USD: $${priceUsd} from Yahoo | Rate: ${conversionRate.toFixed(2)}`);
+          console.log(`[Scraper Success] XAG/USD: $${priceUsd} from Yahoo (${silverRes.config.url}) | Rate: ${conversionRate.toFixed(2)}`);
           
           await storage.createSilverPrice({
             priceUsd: priceUsd.toString(),
@@ -96,7 +108,7 @@ async function scrapeSilverPrice() {
           return;
         }
       }
-      console.warn("[Scraper Warning] HTML matched but price invalid or not found on Yahoo. Falling back.");
+      console.warn("[Scraper Warning] Yahoo price not found or out of range. URL used:", silverRes.config.url);
     }
 
     if (silverRes.status === 200 && inrRes.status === 200 && isJson(silverRes) && isJson(inrRes)) {
