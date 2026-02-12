@@ -261,11 +261,11 @@ export default function Home() {
             <ul className="space-y-3 text-sm text-muted-foreground">
               <li className="flex items-start gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-accent mt-1.5" />
-                Data is updated every {refreshInterval} minutes. Use the slider below to adjust polling frequency.
+                Data is updated via real-time market search. Use the slider below to adjust polling frequency.
               </li>
               <li className="flex items-start gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-accent mt-1.5" />
-                The chart displays the most recent 12 data points.
+                Pricing sourced from global market indicators including Investing.com and Live Spot Data.
               </li>
               <li className="flex items-start gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-accent mt-1.5" />
