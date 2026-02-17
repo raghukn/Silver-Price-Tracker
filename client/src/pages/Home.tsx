@@ -159,7 +159,7 @@ export default function Home() {
           />
 
           <MetricCard
-            label="Current Silver Price (INR)"
+            label="Calculated Price (INR)"
             value={`₹${latestPriceInr.toFixed(2)}`}
             subValue={`Last computed: ${format(lastUpdated, "h:mm a")}`}
             icon={<Coins className="w-6 h-6" />}
