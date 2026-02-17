@@ -189,7 +189,7 @@ export default function Home() {
           />
 
           <MetricCard
-            label="Silver ETF Price (NSE)"
+            label="Nippon ETF Price"
             value={`₹${etfPrice.toFixed(2)}`}
             subValue={`SILVERBEES at ${format(lastUpdated, "h:mm a")}`}
             icon={<Coins className="w-6 h-6 text-orange-500" />}
