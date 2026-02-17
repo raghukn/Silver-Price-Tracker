@@ -53,10 +53,23 @@ async function scrapeSilverPrice() {
     let priceUsd = lastPrice ? Number(lastPrice.priceUsd) : 76.0;
     let conversionRate = lastPrice ? Number(lastPrice.conversionRate) : 83.5;
     let currentEtfPrice = lastPrice ? (lastPrice.etfPrice ? Number(lastPrice.etfPrice) : null) : null;
+    let volumeInfo = lastPrice && 'volumeInfo' in lastPrice ? (lastPrice as any).volumeInfo : null;
 
     if (silverRes.status === 'fulfilled' && silverRes.value.status === 200) {
       const val = silverRes.value.data?.chart?.result?.[0]?.meta?.regularMarketPrice;
       if (val) priceUsd = val;
+      
+      // Try to get volume or trade info
+      const indicators = silverRes.value.data?.chart?.result?.[0]?.indicators?.quote?.[0];
+      if (indicators && indicators.volume) {
+        const volumes = indicators.volume.filter((v: any) => v !== null);
+        if (volumes.length > 0) {
+          const avgVol = volumes.reduce((a: number, b: number) => a + b, 0) / volumes.length;
+          const lastVol = volumes[volumes.length - 1];
+          // Simple sentiment: if last volume > avg, mark as higher activity
+          volumeInfo = JSON.stringify({ lastVol, avgVol, sentiment: lastVol > avgVol ? 'High' : 'Normal' });
+        }
+      }
     }
 
     if (inrRes.status === 'fulfilled' && inrRes.value.status === 200) {
@@ -79,6 +92,7 @@ async function scrapeSilverPrice() {
       conversionRate: conversionRate.toFixed(4),
       etfPrice: currentEtfPrice ? currentEtfPrice.toString() : null,
       marginX: currentMargin.toString(),
+      volumeInfo: volumeInfo,
     });
 
   } catch (err: any) {

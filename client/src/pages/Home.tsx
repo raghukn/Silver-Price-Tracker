@@ -74,14 +74,14 @@ export default function Home() {
     return null;
   };
 
-  const getFiveMinTrend = () => {
+  const getTrend = (minutes: number) => {
     if (!prices || prices.length < 2) return null;
     
     const latestPrice = prices[prices.length - 1];
-    const fiveMinsAgo = new Date(Date.now() - 5 * 60000);
+    const pastTime = new Date(Date.now() - minutes * 60000);
     
-    // Find a price point from approximately 5 minutes ago
-    const oldPricePoint = [...prices].reverse().find(p => new Date(p.timestamp) <= fiveMinsAgo);
+    // Find a price point from approximately the specified time ago
+    const oldPricePoint = [...prices].reverse().find(p => new Date(p.timestamp) <= pastTime);
     
     if (!oldPricePoint) return null;
     
@@ -91,13 +91,14 @@ export default function Home() {
     
     return {
       percent: Math.abs(changePercent).toFixed(2),
-      isUp: changePercent >= 0,
-      diff: (currentVal - oldVal).toFixed(3)
+      isUp: changePercent >= 0
     };
   };
 
   const alertInfo = getAlertInfo();
-  const fiveMinTrend = getFiveMinTrend();
+  const trend5m = getTrend(5);
+  const trend30m = getTrend(30);
+  const trend60m = getTrend(60);
 
   useEffect(() => {
     if (latest?.marginX) {
@@ -144,6 +145,7 @@ export default function Home() {
   const etfPrice = latest?.etfPrice ? parseFloat(latest.etfPrice) : 0;
   const conversionRate = latest?.conversionRate ? parseFloat(latest.conversionRate) : 93;
   const lastUpdated = latest?.timestamp ? new Date(latest.timestamp) : new Date();
+  const volumeInfo = latest?.volumeInfo ? JSON.parse(latest.volumeInfo) : null;
 
   const latestPriceInr = (latestPriceUsd / 31.3) * conversionRate + marginX;
 
@@ -189,12 +191,32 @@ export default function Home() {
             label="Global Spot Price (USD)"
             value={`$${latestPriceUsd.toFixed(2)}`}
             subValue={
-              fiveMinTrend ? (
-                <span className={`flex items-center gap-1 font-medium ${fiveMinTrend.isUp ? "text-emerald-500" : "text-rose-500"}`}>
-                  {fiveMinTrend.isUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                  {fiveMinTrend.percent}% (5m)
-                </span>
-              ) : `Last updated: ${format(lastUpdated, "h:mm a")}`
+              <div className="flex flex-col gap-1 mt-1">
+                {trend5m && (
+                  <div className={`flex items-center gap-1 text-[10px] font-medium ${trend5m.isUp ? "text-emerald-500" : "text-rose-500"}`}>
+                    {trend5m.isUp ? <ArrowUpRight className="w-2.5 h-2.5" /> : <ArrowDownRight className="w-2.5 h-2.5" />}
+                    {trend5m.percent}% (5m)
+                  </div>
+                )}
+                {trend30m && (
+                  <div className={`flex items-center gap-1 text-[10px] font-medium ${trend30m.isUp ? "text-emerald-500" : "text-rose-500"}`}>
+                    {trend30m.isUp ? <ArrowUpRight className="w-2.5 h-2.5" /> : <ArrowDownRight className="w-2.5 h-2.5" />}
+                    {trend30m.percent}% (30m)
+                  </div>
+                )}
+                {trend60m && (
+                  <div className={`flex items-center gap-1 text-[10px] font-medium ${trend60m.isUp ? "text-emerald-500" : "text-rose-500"}`}>
+                    {trend60m.isUp ? <ArrowUpRight className="w-2.5 h-2.5" /> : <ArrowDownRight className="w-2.5 h-2.5" />}
+                    {trend60m.percent}% (60m)
+                  </div>
+                )}
+                {volumeInfo && (
+                  <div className="flex items-center gap-1 text-[10px] font-medium text-blue-500 mt-1 pt-1 border-t border-border/20">
+                    Activity: {volumeInfo.sentiment}
+                  </div>
+                )}
+                {!trend5m && !trend30m && !trend60m && <span>Last updated: {format(lastUpdated, "h:mm a")}</span>}
+              </div>
             }
             icon={<DollarSign className="w-6 h-6" />}
             delay={0.1}

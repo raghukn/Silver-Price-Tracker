@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 interface MetricCardProps {
   label: string;
   value: string;
-  subValue?: string;
+  subValue?: ReactNode;
   icon?: ReactNode;
   trend?: "up" | "down" | "neutral";
   className?: string;
@@ -40,9 +40,9 @@ export function MetricCard({
             </span>
           </div>
           {subValue && (
-            <p className="mt-1 text-sm text-muted-foreground font-medium">
+            <div className="mt-1 text-sm text-muted-foreground font-medium">
               {subValue}
-            </p>
+            </div>
           )}
         </div>
         

@@ -10,6 +10,7 @@ export const silverPrices = pgTable("silver_prices", {
   conversionRate: decimal("conversion_rate").notNull().default("93"), // USD to INR rate
   etfPrice: decimal("etf_price"), // Silver ETF price in INR
   marginX: decimal("margin_x").notNull().default("2"), // Configurable margin X
+  volumeInfo: text("volume_info"), // JSON string for volume/sentiment
   timestamp: timestamp("timestamp").defaultNow().notNull(),
 });
 
