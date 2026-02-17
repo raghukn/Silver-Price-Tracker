@@ -1,4 +1,5 @@
 import { useSilverPrices, useLatestPrice } from "@/hooks/use-prices";
+import { useAnalysis } from "@/hooks/use-analysis";
 import { Header } from "@/components/Header";
 import { PriceChart } from "@/components/PriceChart";
 import { MetricCard } from "@/components/MetricCard";
@@ -12,6 +13,8 @@ export default function Home() {
   const [refreshInterval, setRefreshInterval] = useState(5); // in minutes
   const { data: prices, isLoading: isLoadingHistory, isError: isHistoryError, refetch: refetchHistory } = useSilverPrices(refreshInterval * 60000);
   const { data: latest, isLoading: isLoadingLatest, refetch: refetchLatest } = useLatestPrice(refreshInterval * 60000);
+
+  const { data: analysis, isLoading: isLoadingAnalysis } = useAnalysis();
 
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefreshError, setLastRefreshError] = useState<Date | null>(null);
@@ -115,7 +118,7 @@ export default function Home() {
 
   const trend = calculateTrend();
 
-  if (isLoadingHistory || isLoadingLatest) {
+  if (isLoadingHistory || isLoadingLatest || isLoadingAnalysis) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
         <Loader2 className="w-10 h-10 text-primary animate-spin" />
@@ -307,78 +310,129 @@ export default function Home() {
         </section>
 
         {/* Info Grid */}
-        <section className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8">
-          <motion.div 
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="bg-primary/5 rounded-2xl p-8 border border-primary/10"
-          >
-            <h3 className="text-lg font-bold font-display mb-4 text-primary">Calculation Formula</h3>
-            <div className="font-mono text-sm bg-background p-4 rounded-xl border border-border text-foreground/80 mb-4">
-              Price (INR/g) = (XAGUSD / 31.3) × {conversionRate.toFixed(2)} + {marginX}
+        <section className="mt-12 grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Expert Analysis Section */}
+          <div className="lg:col-span-2 space-y-6">
+            <h2 className="text-2xl font-bold font-display text-foreground flex items-center gap-2">
+              <span className="p-2 bg-primary/10 rounded-lg">
+                <Clock className="w-5 h-5 text-primary" />
+              </span>
+              Expert Analysis & Commentary
+            </h2>
+            <div className="grid gap-4">
+              {analysis && analysis.length > 0 ? (
+                analysis.map((item) => (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl p-6 hover:shadow-lg transition-all"
+                  >
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                          {item.author[0]}
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold">{item.author}</p>
+                          <p className="text-[10px] text-muted-foreground">{format(new Date(item.timestamp), "MMM d, h:mm a")}</p>
+                        </div>
+                      </div>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        item.sentiment === 'Bullish' ? 'bg-emerald-500/10 text-emerald-500' :
+                        item.sentiment === 'Bearish' ? 'bg-rose-500/10 text-rose-500' :
+                        'bg-blue-500/10 text-blue-500'
+                      }`}>
+                        {item.sentiment}
+                      </span>
+                    </div>
+                    <p className="text-sm leading-relaxed text-foreground/80 italic">
+                      "{item.content}"
+                    </p>
+                  </motion.div>
+                ))
+              ) : (
+                <div className="bg-muted/30 rounded-2xl p-8 border border-dashed border-border flex flex-col items-center justify-center text-center">
+                  <p className="text-muted-foreground text-sm">No expert analysis available at the moment.</p>
+                </div>
+              )}
             </div>
-            <div className="flex flex-col gap-6 mb-4">
-              <div className="flex flex-col gap-3">
-                <label className="text-sm font-medium">Adjust Margin (X)</label>
-                <div className="flex items-center gap-4">
-                  <input 
-                    type="range" 
-                    min="0" 
-                    max="10" 
-                    step="0.1" 
-                    value={marginX} 
-                    onChange={(e) => setMarginX(parseFloat(e.target.value))}
-                    className="w-full"
-                  />
-                  <span className="font-mono w-16 text-right">₹{marginX.toFixed(1)}</span>
+          </div>
+
+          <div className="space-y-8">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              className="bg-primary/5 rounded-2xl p-8 border border-primary/10"
+            >
+              <h3 className="text-lg font-bold font-display mb-4 text-primary">Calculation Formula</h3>
+              <div className="font-mono text-sm bg-background p-4 rounded-xl border border-border text-foreground/80 mb-4">
+                Price (INR/g) = (XAGUSD / 31.3) × {conversionRate.toFixed(2)} + {marginX}
+              </div>
+              <div className="flex flex-col gap-6 mb-4">
+                <div className="flex flex-col gap-3">
+                  <label className="text-sm font-medium">Adjust Margin (X)</label>
+                  <div className="flex items-center gap-4">
+                    <input 
+                      type="range" 
+                      min="0" 
+                      max="10" 
+                      step="0.1" 
+                      value={marginX} 
+                      onChange={(e) => setMarginX(parseFloat(e.target.value))}
+                      className="w-full"
+                    />
+                    <span className="font-mono w-16 text-right">₹{marginX.toFixed(1)}</span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  <label className="text-sm font-medium">Auto-Refresh Interval</label>
+                  <div className="flex items-center gap-4">
+                    <input 
+                      type="range" 
+                      min="1" 
+                      max="15" 
+                      step="1" 
+                      value={refreshInterval} 
+                      onChange={(e) => setRefreshInterval(parseInt(e.target.value))}
+                      className="w-full"
+                    />
+                    <span className="font-mono w-16 text-right">{refreshInterval}m</span>
+                  </div>
                 </div>
               </div>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                We take the global spot price of Silver (XAG/USD), convert it to grams by dividing by 31.3 (troy ounce to gram conversion), apply the live USD/INR exchange rate (₹{conversionRate.toFixed(2)}), and then add a margin of ₹{marginX.toFixed(1)}.
+              </p>
+            </motion.div>
 
-              <div className="flex flex-col gap-3">
-                <label className="text-sm font-medium">Auto-Refresh Interval</label>
-                <div className="flex items-center gap-4">
-                  <input 
-                    type="range" 
-                    min="1" 
-                    max="15" 
-                    step="1" 
-                    value={refreshInterval} 
-                    onChange={(e) => setRefreshInterval(parseInt(e.target.value))}
-                    className="w-full"
-                  />
-                  <span className="font-mono w-16 text-right">{refreshInterval}m</span>
-                </div>
-              </div>
-            </div>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              We take the global spot price of Silver (XAG/USD), convert it to grams by dividing by 31.3 (troy ounce to gram conversion), apply the live USD/INR exchange rate (₹{conversionRate.toFixed(2)}), and then add a margin of ₹{marginX.toFixed(1)}.
-            </p>
-          </motion.div>
-
-          <motion.div 
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="bg-secondary/30 rounded-2xl p-8 border border-secondary"
-          >
-            <h3 className="text-lg font-bold font-display mb-4">About This Data</h3>
-            <ul className="space-y-3 text-sm text-muted-foreground">
-              <li className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-accent mt-1.5" />
-                Data is updated via real-time market search. Use the slider below to adjust polling frequency.
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-accent mt-1.5" />
-                Pricing sourced from global market indicators including Yahoo Finance and Live Spot Data.
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-accent mt-1.5" />
-                Prices are indicative and for informational purposes only. Always verify with a broker before trading.
-              </li>
-            </ul>
-          </motion.div>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="bg-secondary/30 rounded-2xl p-8 border border-secondary"
+            >
+              <h3 className="text-lg font-bold font-display mb-4">About This Data</h3>
+              <ul className="space-y-3 text-sm text-muted-foreground">
+                <li className="flex items-start gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent mt-1.5" />
+                  Data is updated via real-time market search. Use the slider below to adjust polling frequency.
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent mt-1.5" />
+                  Pricing sourced from global market indicators including Yahoo Finance and Live Spot Data.
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent mt-1.5" />
+                  Prices are indicative and for informational purposes only. Always verify with a broker before trading.
+                </li>
+              </ul>
+            </motion.div>
+          </div>
         </section>
       </main>
     </div>

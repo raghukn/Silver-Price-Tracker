@@ -131,6 +131,20 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/analysis", async (req, res) => {
+    const list = await storage.getLatestAnalysis();
+    res.json(list);
+  });
+
+  app.post("/api/analysis", async (req, res) => {
+    try {
+      const result = await storage.createAnalysis(req.body);
+      res.json(result);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to create analysis" });
+    }
+  });
+
   scrapeSilverPrice();
   
   const intervalId = setInterval(scrapeSilverPrice, SCRAPE_INTERVAL_MS);

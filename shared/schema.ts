@@ -21,3 +21,19 @@ export const insertSilverPriceSchema = createInsertSchema(silverPrices).omit({
 
 export type SilverPrice = typeof silverPrices.$inferSelect;
 export type InsertSilverPrice = z.infer<typeof insertSilverPriceSchema>;
+
+export const analysis = pgTable("analysis", {
+  id: serial("id").primaryKey(),
+  content: text("content").notNull(),
+  author: text("author").notNull().default("Market Expert"),
+  sentiment: text("sentiment").notNull().default("Neutral"), // Bullish, Bearish, Neutral
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+});
+
+export const insertAnalysisSchema = createInsertSchema(analysis).omit({
+  id: true,
+  timestamp: true,
+});
+
+export type Analysis = typeof analysis.$inferSelect;
+export type InsertAnalysis = z.infer<typeof insertAnalysisSchema>;
