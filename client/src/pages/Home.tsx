@@ -74,7 +74,30 @@ export default function Home() {
     return null;
   };
 
+  const getFiveMinTrend = () => {
+    if (!prices || prices.length < 2) return null;
+    
+    const latestPrice = prices[prices.length - 1];
+    const fiveMinsAgo = new Date(Date.now() - 5 * 60000);
+    
+    // Find a price point from approximately 5 minutes ago
+    const oldPricePoint = [...prices].reverse().find(p => new Date(p.timestamp) <= fiveMinsAgo);
+    
+    if (!oldPricePoint) return null;
+    
+    const currentVal = parseFloat(latestPrice.priceUsd);
+    const oldVal = parseFloat(oldPricePoint.priceUsd);
+    const changePercent = ((currentVal - oldVal) / oldVal) * 100;
+    
+    return {
+      percent: Math.abs(changePercent).toFixed(2),
+      isUp: changePercent >= 0,
+      diff: (currentVal - oldVal).toFixed(3)
+    };
+  };
+
   const alertInfo = getAlertInfo();
+  const fiveMinTrend = getFiveMinTrend();
 
   useEffect(() => {
     if (latest?.marginX) {
@@ -165,7 +188,14 @@ export default function Home() {
           <MetricCard
             label="Global Spot Price (USD)"
             value={`$${latestPriceUsd.toFixed(2)}`}
-            subValue={`Last updated: ${format(lastUpdated, "h:mm a")}`}
+            subValue={
+              fiveMinTrend ? (
+                <span className={`flex items-center gap-1 font-medium ${fiveMinTrend.isUp ? "text-emerald-500" : "text-rose-500"}`}>
+                  {fiveMinTrend.isUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                  {fiveMinTrend.percent}% (5m)
+                </span>
+              ) : `Last updated: ${format(lastUpdated, "h:mm a")}`
+            }
             icon={<DollarSign className="w-6 h-6" />}
             delay={0.1}
           />
