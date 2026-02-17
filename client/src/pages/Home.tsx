@@ -48,7 +48,7 @@ export default function Home() {
   };
 
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [marginX, setMarginX] = useState(2);
+  const [marginX, setMarginX] = useState(4);
 
   useEffect(() => {
     if (latest?.marginX) {

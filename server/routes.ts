@@ -68,7 +68,7 @@ async function scrapeSilverPrice() {
       currentEtfPrice = etfPrice.value;
     }
 
-    const currentMargin = 2;
+    const currentMargin = 4;
     const priceInr = (priceUsd / TROY_OUNCE_TO_GRAMS) * conversionRate + currentMargin;
 
     console.log(`[Scraper Success] XAG/USD: $${priceUsd} | USD/INR: ${conversionRate.toFixed(2)} | INR/g: ${priceInr.toFixed(2)}`);
