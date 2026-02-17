@@ -1,7 +1,7 @@
 
 import { silverPrices, analysis, type InsertSilverPrice, type SilverPrice, type InsertAnalysis, type Analysis } from "@shared/schema";
 import { db } from "./db";
-import { desc } from "drizzle-orm";
+import { desc, sql } from "drizzle-orm";
 
 export interface IStorage {
   createSilverPrice(price: InsertSilverPrice): Promise<SilverPrice>;
@@ -41,9 +41,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getLatestAnalysis(limit: number = 5): Promise<Analysis[]> {
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     return await db
       .select()
       .from(analysis)
+      .where(sql`${analysis.timestamp} >= ${twentyFourHoursAgo}`)
       .orderBy(desc(analysis.timestamp))
       .limit(limit);
   }

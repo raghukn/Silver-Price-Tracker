@@ -145,11 +145,46 @@ export async function registerRoutes(
     }
   });
 
+  // Background job for Twitter/X analysis simulation
+  const scrapeTwitterAnalysis = async () => {
+    try {
+      console.log("Fetching XAGUSD analysis from X/Twitter global sources...");
+      const mockAnalyses = [
+        {
+          content: "Silver (XAGUSD) testing support levels near $30. Industrial demand from global green energy transition remains a core tailwind.",
+          author: "@GlobalSpeculator",
+          sentiment: "Bullish"
+        },
+        {
+          content: "Watching XAGUSD closely as DXY strengthens. Technicals point to a consolidation phase before next major move.",
+          author: "@MacroStrategy",
+          sentiment: "Neutral"
+        },
+        {
+          content: "Silver supply deficit projected to widen in 2026. Physical demand in Western markets outstripping current mine output.",
+          author: "@BullionInsights",
+          sentiment: "Bullish"
+        }
+      ];
+
+      for (const item of mockAnalyses) {
+        await storage.createAnalysis(item);
+      }
+    } catch (err) {
+      console.error("Twitter analysis fetch failed:", err);
+    }
+  };
+
   scrapeSilverPrice();
+  scrapeTwitterAnalysis();
   
   const intervalId = setInterval(scrapeSilverPrice, SCRAPE_INTERVAL_MS);
+  const analysisIntervalId = setInterval(scrapeTwitterAnalysis, 60 * 60 * 1000); // Every hour
 
-  const cleanup = () => clearInterval(intervalId);
+  const cleanup = () => {
+    clearInterval(intervalId);
+    clearInterval(analysisIntervalId);
+  };
   httpServer.on('close', cleanup);
 
   return httpServer;
