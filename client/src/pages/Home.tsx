@@ -192,26 +192,8 @@ export default function Home() {
             value={`$${latestPriceUsd.toFixed(2)}`}
             subValue={
               <div className="flex flex-col gap-1 mt-1">
-                {trend5m && (
-                  <div className={`flex items-center gap-1 text-[10px] font-medium ${trend5m.isUp ? "text-emerald-500" : "text-rose-500"}`}>
-                    {trend5m.isUp ? <ArrowUpRight className="w-2.5 h-2.5" /> : <ArrowDownRight className="w-2.5 h-2.5" />}
-                    {trend5m.percent}% (5m)
-                  </div>
-                )}
-                {trend30m && (
-                  <div className={`flex items-center gap-1 text-[10px] font-medium ${trend30m.isUp ? "text-emerald-500" : "text-rose-500"}`}>
-                    {trend30m.isUp ? <ArrowUpRight className="w-2.5 h-2.5" /> : <ArrowDownRight className="w-2.5 h-2.5" />}
-                    {trend30m.percent}% (30m)
-                  </div>
-                )}
-                {trend60m && (
-                  <div className={`flex items-center gap-1 text-[10px] font-medium ${trend60m.isUp ? "text-emerald-500" : "text-rose-500"}`}>
-                    {trend60m.isUp ? <ArrowUpRight className="w-2.5 h-2.5" /> : <ArrowDownRight className="w-2.5 h-2.5" />}
-                    {trend60m.percent}% (60m)
-                  </div>
-                )}
                 {volumeInfo && (
-                  <div className="flex items-center gap-1 text-[10px] font-medium text-blue-500 mt-1 pt-1 border-t border-border/20">
+                  <div className="flex items-center gap-1 text-[10px] font-medium text-blue-500">
                     Activity: {volumeInfo.sentiment}
                   </div>
                 )}
@@ -256,6 +238,40 @@ export default function Home() {
             delay={0.4}
             className="border-l-4 border-l-primary"
           />
+        </div>
+
+        {/* Extended Trends Section */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {trend5m && (
+            <MetricCard
+              label="5m Trend"
+              value={`${trend5m.isUp ? "+" : "-"}${trend5m.percent}%`}
+              subValue="Price change in last 5 minutes"
+              icon={trend5m.isUp ? <ArrowUpRight className="w-6 h-6 text-emerald-500" /> : <ArrowDownRight className="w-6 h-6 text-rose-500" />}
+              className={trend5m.isUp ? "border-b-4 border-emerald-500" : "border-b-4 border-rose-500"}
+              delay={0.5}
+            />
+          )}
+          {trend30m && (
+            <MetricCard
+              label="30m Trend"
+              value={`${trend30m.isUp ? "+" : "-"}${trend30m.percent}%`}
+              subValue="Price change in last 30 minutes"
+              icon={trend30m.isUp ? <ArrowUpRight className="w-6 h-6 text-emerald-500" /> : <ArrowDownRight className="w-6 h-6 text-rose-500" />}
+              className={trend30m.isUp ? "border-b-4 border-emerald-500" : "border-b-4 border-rose-500"}
+              delay={0.6}
+            />
+          )}
+          {trend60m && (
+            <MetricCard
+              label="60m Trend"
+              value={`${trend60m.isUp ? "+" : "-"}${trend60m.percent}%`}
+              subValue="Price change in last 60 minutes"
+              icon={trend60m.isUp ? <ArrowUpRight className="w-6 h-6 text-emerald-500" /> : <ArrowDownRight className="w-6 h-6 text-rose-500" />}
+              className={trend60m.isUp ? "border-b-4 border-emerald-500" : "border-b-4 border-rose-500"}
+              delay={0.7}
+            />
+          )}
         </div>
 
         {/* Chart Section */}
