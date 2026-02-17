@@ -50,6 +50,32 @@ export default function Home() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [marginX, setMarginX] = useState(4);
 
+  const getAlertInfo = () => {
+    if (!prices || prices.length < 2) return null;
+    
+    const latestPrice = prices[prices.length - 1];
+    const tenMinsAgo = new Date(Date.now() - 10 * 60000);
+    
+    // Find a price point from approximately 10 minutes ago
+    const oldPricePoint = [...prices].reverse().find(p => new Date(p.timestamp) <= tenMinsAgo);
+    
+    if (!oldPricePoint) return null;
+    
+    const currentVal = parseFloat(latestPrice.priceUsd);
+    const oldVal = parseFloat(oldPricePoint.priceUsd);
+    const changePercent = ((currentVal - oldVal) / oldVal) * 100;
+    
+    if (Math.abs(changePercent) >= 1) {
+      return {
+        percent: Math.abs(changePercent).toFixed(2),
+        isUp: changePercent > 0
+      };
+    }
+    return null;
+  };
+
+  const alertInfo = getAlertInfo();
+
   useEffect(() => {
     if (latest?.marginX) {
       setMarginX(parseFloat(latest.marginX));
@@ -106,9 +132,21 @@ export default function Home() {
         
         {/* Header and Refresh */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-          <div>
+          <div className="flex flex-col gap-2">
             <h1 className="text-3xl font-bold font-display text-foreground">Market Overview</h1>
             <p className="text-muted-foreground">Real-time silver prices and exchange rates</p>
+            {alertInfo && (
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-bold w-fit ${
+                  alertInfo.isUp ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" : "bg-rose-500/10 text-rose-500 border border-rose-500/20"
+                }`}
+              >
+                {alertInfo.isUp ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
+                Significant Movement: {alertInfo.percent}% in last 10m
+              </motion.div>
+            )}
           </div>
           <Button 
             onClick={handleManualRefresh}
