@@ -7,9 +7,7 @@ import axios from "axios";
 
 // Configuration
 const SCRAPE_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
-const XAG_USD_API_URL = "https://data-asg.goldprice.org/dbXRates/USD";
 const USD_INR_API_URL = "https://data-asg.goldprice.org/dbXRates/INR";
-const ETF_URL = "https://www.nseindia.com/get-quote/equity/SILVERBEES";
 const TROY_OUNCE_TO_GRAMS = 31.3;
 
 async function fetchEtfPrice() {
@@ -33,9 +31,7 @@ async function scrapeSilverPrice() {
   try {
     console.log("Starting fetch of silver, exchange rates, and ETF...");
     
-    const isJson = (res: any) => res?.headers?.['content-type']?.includes('application/json');
-
-    const [silverRes, inrRes, etfPrice] = await Promise.all([
+    const [silverRes, inrRes, etfPrice] = await Promise.allSettled([
       axios.get("https://query1.finance.yahoo.com/v8/finance/chart/XAGX-USD", { 
         timeout: 15000, 
         headers: {
@@ -43,77 +39,45 @@ async function scrapeSilverPrice() {
           'Accept': 'application/json',
         }
       }),
-      axios.get(USD_INR_API_URL, { timeout: 10000, validateStatus: (s) => s < 500 }),
-      fetchEtfPrice()
-    ]).catch(err => {
-      console.error("Fetch failed:", err.message);
-      throw err;
-    });
-
-    // Handle Yahoo JSON API response
-    if (silverRes.status === 200 && isJson(silverRes)) {
-      const priceUsd = silverRes.data?.chart?.result?.[0]?.meta?.regularMarketPrice;
-      
-      if (priceUsd && priceUsd > 10 && priceUsd < 500) {
-        // Get conversion rate from INR source if possible
-        let conversionRate = 83.5;
-        if (inrRes.status === 200 && isJson(inrRes)) {
-          const xagInrPerOunce = inrRes.data.items?.[0]?.xagPrice;
-          if (xagInrPerOunce) {
-            conversionRate = xagInrPerOunce / priceUsd;
-            if (conversionRate < 70 || conversionRate > 110) {
-              conversionRate = 83.5;
-            }
-          }
+      axios.get("https://query1.finance.yahoo.com/v8/finance/chart/INR=X", { 
+        timeout: 15000,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+          'Accept': 'application/json',
         }
+      }),
+      fetchEtfPrice()
+    ]);
 
-        const currentMargin = 2;
-        const priceInr = (priceUsd / TROY_OUNCE_TO_GRAMS) * conversionRate + currentMargin;
+    const lastPrice = await storage.getLatestPrice();
+    let priceUsd = lastPrice ? Number(lastPrice.priceUsd) : 76.0;
+    let conversionRate = lastPrice ? Number(lastPrice.conversionRate) : 83.5;
+    let currentEtfPrice = lastPrice ? (lastPrice.etfPrice ? Number(lastPrice.etfPrice) : null) : null;
 
-        console.log(`[Scraper Success] XAG/USD: $${priceUsd} from Yahoo API | Rate: ${conversionRate.toFixed(2)}`);
-        
-        await storage.createSilverPrice({
-          priceUsd: priceUsd.toString(),
-          priceInr: priceInr.toFixed(2),
-          conversionRate: conversionRate.toFixed(4),
-          etfPrice: etfPrice ? etfPrice.toString() : null,
-          marginX: currentMargin.toString(),
-        });
-        return;
-      }
+    if (silverRes.status === 'fulfilled' && silverRes.value.status === 200) {
+      const val = silverRes.value.data?.chart?.result?.[0]?.meta?.regularMarketPrice;
+      if (val) priceUsd = val;
     }
 
-    if (silverRes.status === 200 && inrRes.status === 200 && isJson(silverRes) && isJson(inrRes)) {
-      const priceUsd = silverRes.data.items?.[0]?.xagPrice;
-      const xagInrPerOunce = inrRes.data.items?.[0]?.xagPrice;
-
-      if (xagInrPerOunce && priceUsd) {
-        const conversionRate = xagInrPerOunce / priceUsd;
-        const currentMargin = 2; // Default, can be updated via API if we add a route
-        const priceInr = (priceUsd / TROY_OUNCE_TO_GRAMS) * conversionRate + currentMargin;
-
-        await storage.createSilverPrice({
-          priceUsd: priceUsd.toString(),
-          priceInr: priceInr.toFixed(2),
-          conversionRate: conversionRate.toFixed(4),
-          etfPrice: etfPrice ? etfPrice.toString() : null,
-          marginX: currentMargin.toString(),
-        });
-        return;
-      }
+    if (inrRes.status === 'fulfilled' && inrRes.value.status === 200) {
+      const val = inrRes.value.data?.chart?.result?.[0]?.meta?.regularMarketPrice;
+      if (val) conversionRate = val;
     }
 
-    const mockPriceUsd = 22.5 + (Math.random() * 0.5);
-    const mockRate = 83.1 + (Math.random() * 0.2);
+    if (etfPrice.status === 'fulfilled') {
+      currentEtfPrice = etfPrice.value;
+    }
+
     const currentMargin = 2;
-    const mockPriceInr = (mockPriceUsd / TROY_OUNCE_TO_GRAMS) * mockRate + currentMargin;
-    const mockEtf = 70 + (Math.random() * 5);
+    const priceInr = (priceUsd / TROY_OUNCE_TO_GRAMS) * conversionRate + currentMargin;
 
+    console.log(`[Scraper Success] XAG/USD: $${priceUsd} | USD/INR: ${conversionRate.toFixed(2)} | INR/g: ${priceInr.toFixed(2)}`);
+    
     await storage.createSilverPrice({
-      priceUsd: mockPriceUsd.toFixed(2),
-      priceInr: mockPriceInr.toFixed(2),
-      conversionRate: mockRate.toFixed(4),
-      etfPrice: etfPrice ? etfPrice.toString() : mockEtf.toFixed(2),
+      priceUsd: priceUsd.toString(),
+      priceInr: priceInr.toFixed(2),
+      conversionRate: conversionRate.toFixed(4),
+      etfPrice: currentEtfPrice ? currentEtfPrice.toString() : null,
       marginX: currentMargin.toString(),
     });
 
@@ -129,9 +93,7 @@ export async function registerRoutes(
   
   // API Routes
   app.get(api.prices.list.path, async (req, res) => {
-    // Return chronological order for the chart (oldest first) so we reverse the storage result (newest first)
     const prices = await storage.getLatestPrices(24);
-    // Convert decimal strings to numbers for the frontend chart
     const formattedPrices = prices.reverse().map(p => ({
       ...p,
       priceUsd: Number(p.priceUsd),
@@ -155,14 +117,10 @@ export async function registerRoutes(
     }
   });
 
-  // Start the scraping job
-  // Run once immediately on startup
   scrapeSilverPrice();
   
-  // Schedule
   const intervalId = setInterval(scrapeSilverPrice, SCRAPE_INTERVAL_MS);
 
-  // Graceful shutdown (optional but good practice)
   const cleanup = () => clearInterval(intervalId);
   httpServer.on('close', cleanup);
 
